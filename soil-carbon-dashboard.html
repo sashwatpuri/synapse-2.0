@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Soil Carbon Intelligence Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@400;500;600;700&display=swap");
+
+    :root {
+      --bg: #050b08;
+      --bg-2: #0a1510;
+      --panel: #0f2018;
+      --panel-2: #142a20;
+      --panel-soft: rgba(20, 42, 32, 0.74);
+      --line: rgba(176, 221, 174, 0.18);
+      --text: #eff8ee;
+      --muted: #98b19e;
+      --accent: #87d39a;
+      --accent-2: #c7a25f;
+      --accent-3: #79bf6f;
+      --success: #8ae9a1;
+      --warning: #efc061;
+      --danger: #f07b70;
+      --shadow: 0 18px 44px rgba(0, 0, 0, 0.42);
+      --radius: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      color: var(--text);
+      font-family: "Sora", "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 8% 8%, rgba(135, 211, 154, 0.18), transparent 34%),
+        radial-gradient(circle at 90% 0%, rgba(199, 162, 95, 0.18), transparent 29%),
+        linear-gradient(180deg, var(--bg-2), var(--bg));
+    }
+
+    body {
+      padding: 22px;
+    }
+
+    .dashboard {
+      max-width: 1600px;
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+    }
+
+    .reveal {
+      animation: slideReveal 0.6s ease both;
+    }
+
+    @keyframes slideReveal {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, rgba(16, 40, 29, 0.97), rgba(9, 21, 16, 0.95));
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: auto -120px -160px auto;
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(135, 211, 154, 0.28), transparent 64%);
+      pointer-events: none;
+    }
+
+    .title-block h1 {
+      margin: 0;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(1.4rem, 2.6vw, 2.4rem);
+      letter-spacing: 0.3px;
+    }
+
+    .title-block p {
+      margin: 10px 0 0;
+      color: var(--muted);
+      max-width: 70ch;
+      line-height: 1.5;
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .pill {
+      border-radius: 999px;
+      padding: 10px 14px;
+      border: 1px solid transparent;
+      font-size: 0.84rem;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      white-space: nowrap;
+    }
+
+    .pill.live {
+      color: var(--success);
+      background: rgba(138, 233, 161, 0.14);
+      border-color: rgba(138, 233, 161, 0.34);
+    }
+
+    .pill.role {
+      color: #f6f2dd;
+      background: rgba(199, 162, 95, 0.16);
+      border-color: rgba(199, 162, 95, 0.35);
+    }
+
+    .toolbar {
+      position: sticky;
+      top: 10px;
+      z-index: 20;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      background: rgba(8, 19, 14, 0.82);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      backdrop-filter: blur(8px);
+    }
+
+    label.control {
+      display: grid;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    select, input {
+      appearance: none;
+      background: rgba(9, 22, 16, 0.9);
+      color: var(--text);
+      border: 1px solid rgba(167, 214, 162, 0.26);
+      border-radius: 12px;
+      min-width: 170px;
+      padding: 10px 12px;
+      font: inherit;
+      outline: none;
+    }
+
+    input[type="number"] {
+      min-width: 130px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 10px 14px;
+      color: #fff;
+      font-weight: 700;
+      font: inherit;
+      cursor: pointer;
+      transition: transform 0.16s ease, filter 0.16s ease, opacity 0.2s ease;
+      background: linear-gradient(140deg, #659f57, #8cc66a);
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.06);
+    }
+
+    button.secondary {
+      background: linear-gradient(140deg, #2a3f31, #3e5847);
+      border: 1px solid rgba(167, 214, 162, 0.2);
+    }
+
+    button.export {
+      background: linear-gradient(140deg, #8d6e3f, #c7a25f);
+      border: 1px solid rgba(245, 219, 173, 0.2);
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+      filter: none;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      min-height: 120px;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(18, 39, 29, 0.95), rgba(11, 22, 17, 0.95));
+      box-shadow: var(--shadow);
+      padding: 15px;
+    }
+
+    .card h3,
+    .section h2 {
+      margin: 0 0 8px;
+      font-size: 0.86rem;
+      font-weight: 600;
+      color: #dfebdf;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .metric {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(1.4rem, 2vw, 2rem);
+      line-height: 1.08;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .metric-sub,
+    .section-header p,
+    .footnote {
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.45;
+    }
+
+    .layout {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .section {
+      border-radius: 22px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(17, 36, 27, 0.96), rgba(10, 20, 15, 0.96));
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .section-header p {
+      margin: 0;
+    }
+
+    .chart-wrap {
+      height: 320px;
+    }
+
+    .chart-wrap.tall {
+      height: 360px;
+    }
+
+    .chart-wrap canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    .nutrient-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .gauge {
+      background: rgba(8, 19, 14, 0.92);
+      border: 1px solid rgba(167, 214, 162, 0.18);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .gauge-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .gauge-top strong {
+      font-size: 0.95rem;
+    }
+
+    .gauge-top span,
+    .range {
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .bar-track {
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+      margin-bottom: 7px;
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 45%;
+      border-radius: inherit;
+      transition: width 0.3s ease;
+    }
+
+    .range {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .calc-grid {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .calc-box {
+      background: rgba(9, 20, 15, 0.92);
+      border-radius: 14px;
+      border: 1px solid rgba(167, 214, 162, 0.2);
+      padding: 12px;
+    }
+
+    .calc-box .label {
+      color: var(--muted);
+      font-size: 0.78rem;
+      margin-bottom: 6px;
+    }
+
+    .calc-box .value {
+      font-size: 1.2rem;
+      font-family: "Space Grotesk", sans-serif;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+
+    .eligibility-row {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      border: 1px solid transparent;
+    }
+
+    .badge.green {
+      color: var(--success);
+      background: rgba(138, 233, 161, 0.14);
+      border-color: rgba(138, 233, 161, 0.34);
+    }
+
+    .badge.red {
+      color: var(--danger);
+      background: rgba(240, 123, 112, 0.12);
+      border-color: rgba(240, 123, 112, 0.36);
+    }
+
+    .badge.amber {
+      color: var(--warning);
+      background: rgba(239, 192, 97, 0.12);
+      border-color: rgba(239, 192, 97, 0.36);
+    }
+
+    .heatmap-grid {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: 120px repeat(6, minmax(0, 1fr));
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .heatmap-cell {
+      min-height: 48px;
+      border-radius: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 0.82rem;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .heatmap-label {
+      background: rgba(9, 20, 15, 0.95);
+      font-weight: 700;
+    }
+
+    .api-list {
+      margin: 0;
+      padding-left: 16px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.6;
+    }
+
+    .table-wrap {
+      border-radius: 14px;
+      border: 1px solid rgba(167, 214, 162, 0.18);
+      overflow-x: auto;
+      margin-top: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1100px;
+      background: rgba(8, 17, 13, 0.92);
+    }
+
+    thead th {
+      text-align: left;
+      position: sticky;
+      top: 0;
+      background: #102319;
+      font-size: 0.8rem;
+      color: #e3f4e1;
+      padding: 11px 12px;
+      border-bottom: 1px solid rgba(167, 214, 162, 0.2);
+    }
+
+    tbody td {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(167, 214, 162, 0.09);
+      font-size: 0.83rem;
+      color: #edf7ec;
+      white-space: nowrap;
+    }
+
+    tbody tr:nth-child(even) {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .table-status {
+      font-weight: 700;
+    }
+
+    .table-status.healthy { color: var(--success); }
+    .table-status.borderline { color: var(--warning); }
+    .table-status.alert { color: var(--danger); }
+
+    [data-admin-only].hidden {
+      display: none;
+    }
+
+    @media (max-width: 1280px) {
+      .cards {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      body {
+        padding: 12px;
+      }
+
+      .cards {
+        grid-template-columns: 1fr;
+      }
+
+      .nutrient-grid,
+      .calc-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        padding: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <header class="hero reveal">
+      <div class="title-block">
+        <h1>Soil Carbon Intelligence Dashboard</h1>
+        <p>Role-aware dashboard for SOC prediction, carbon estimation, baseline additionality checks, Verra-style eligibility, and credit revenue monitoring.</p>
+      </div>
+      <div class="hero-meta">
+        <span class="pill role" id="roleBadge">ROLE: Admin / Certifying Authority</span>
+        <span class="pill live" id="liveClock">LIVE PIPELINE SIMULATION</span>
+      </div>
+    </header>
+
+    <section class="toolbar reveal" style="animation-delay: 0.05s">
+      <label class="control">
+        Active role
+        <select id="roleSelect">
+          <option value="admin">Admin / Certifying Authority</option>
+          <option value="analyst">Data Analyst</option>
+        </select>
+      </label>
+      <label class="control">
+        Plot
+        <select id="plotSelect"></select>
+      </label>
+      <label class="control">
+        Farmer
+        <select id="farmerSelect"></select>
+      </label>
+      <label class="control">
+        Price per credit ($)
+        <input type="number" id="pricePerCredit" min="1" max="500" step="1" value="22" />
+      </label>
+      <button class="secondary" id="nudgeSensorsBtn">Sensor Burst</button>
+      <button class="export" id="exportTableBtn">Download CSV</button>
+    </section>
+
+    <section class="cards" aria-label="Summary cards">
+      <div class="card reveal" style="animation-delay: 0.1s">
+        <h3>Total Carbon Credits</h3>
+        <div class="metric" id="totalCredits">0.00</div>
+        <div class="metric-sub">Gross credits before buffer deduction</div>
+      </div>
+      <div class="card reveal" style="animation-delay: 0.12s">
+        <h3>Final Credits</h3>
+        <div class="metric" id="finalCredits">0.00</div>
+        <div class="metric-sub">After 10% risk buffer pool adjustment</div>
+      </div>
+      <div class="card reveal" style="animation-delay: 0.14s">
+        <h3>Total Revenue</h3>
+        <div class="metric" id="totalRevenue">$0.00</div>
+        <div class="metric-sub">Final credits multiplied by current credit price</div>
+      </div>
+      <div class="card reveal" style="animation-delay: 0.16s">
+        <h3>Average SOC</h3>
+        <div class="metric" id="avgSoc">0.00%</div>
+        <div class="metric-sub">Model-estimated average SOC across active scope</div>
+      </div>
+      <div class="card reveal" style="animation-delay: 0.18s">
+        <h3>Eligible Plots</h3>
+        <div class="metric" id="eligibilityCount">0 / 0</div>
+        <div class="metric-sub">Plots with positive additionality and confidence &gt; 95%</div>
+      </div>
+      <div class="card reveal" style="animation-delay: 0.2s">
+        <h3>Total Farmers</h3>
+        <div class="metric" id="farmerCount">0</div>
+        <div class="metric-sub">Distinct farmers currently represented</div>
+      </div>
+    </section>
+
+    <section class="layout">
+      <div class="section reveal" style="animation-delay: 0.24s">
+        <div class="section-header">
+          <div>
+            <h2>Soil Nutrient Monitor</h2>
+            <p>Realtime sensor indicators (N, P, K, pH, Moisture) for selected plot.</p>
+          </div>
+        </div>
+        <div class="nutrient-grid" id="nutrientGrid"></div>
+      </div>
+
+      <div class="section reveal" style="animation-delay: 0.27s">
+        <div class="section-header">
+          <div>
+            <h2>Soil Trend Analysis</h2>
+            <p>Monthly SOC trend versus threshold for certification review.</p>
+          </div>
+        </div>
+        <div class="chart-wrap tall">
+          <canvas id="socTrendChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section class="layout">
+      <div class="section reveal" style="animation-delay: 0.3s">
+        <div class="section-header">
+          <div>
+            <h2>Additionality Visualization</h2>
+            <p>Current CO2 equivalent compared with dynamic baseline CO2.</p>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="additionalityChart"></canvas>
+        </div>
+      </div>
+
+      <div class="section reveal" style="animation-delay: 0.33s">
+        <div class="section-header">
+          <div>
+            <h2>Farmer Performance</h2>
+            <p>Credits generated per farmer for comparative analysis.</p>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="farmerChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section class="layout">
+      <div class="section reveal" style="animation-delay: 0.36s">
+        <div class="section-header">
+          <div>
+            <h2>Certification Status</h2>
+            <p>Eligible vs non-eligible plots based on additionality and confidence.</p>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="certificationChart"></canvas>
+        </div>
+      </div>
+
+      <div class="section reveal" style="animation-delay: 0.39s">
+        <div class="section-header">
+          <div>
+            <h2>Carbon Pipeline Engine</h2>
+            <p>Implements SOC_stock, CO2_eq, baseline, additionality, credits, confidence, buffer, and revenue.</p>
+          </div>
+          <div>
+            <button id="runCheckBtn" data-admin-only>Trigger Certification</button>
+          </div>
+        </div>
+
+        <div class="toolbar" style="position: static; top: auto; padding: 0; border: 0; background: none; backdrop-filter: none;">
+          <label class="control">
+            Bulk Density (g/cm3)
+            <input type="number" id="bulkDensity" min="0.8" max="2.0" step="0.01" value="1.25" />
+          </label>
+          <label class="control">
+            Depth (cm)
+            <input type="number" id="depth" min="5" max="100" step="1" value="30" />
+          </label>
+          <label class="control">
+            Area (ha)
+            <input type="number" id="area" min="0.1" max="200" step="0.1" value="12" />
+          </label>
+          <label class="control">
+            RMSE
+            <input type="number" id="rmse" min="0.01" max="2" step="0.01" value="0.06" />
+          </label>
+        </div>
+
+        <div class="calc-grid" id="calcGrid"></div>
+
+        <div class="eligibility-row">
+          <span class="badge amber" id="eligibilityBadge">PENDING REVIEW</span>
+          <span class="metric-sub" id="eligibilityDetails">Admin can trigger certification workflow. Analyst role remains read-only.</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="layout">
+      <div class="section reveal" style="animation-delay: 0.41s">
+        <div class="section-header">
+          <div>
+            <h2>Statistical Analysis Heatmap</h2>
+            <p>Correlations between nutrients and SOC for trend interpretation.</p>
+          </div>
+        </div>
+        <div class="heatmap-grid" id="heatmapGrid"></div>
+      </div>
+
+      <div class="section reveal" style="animation-delay: 0.43s">
+        <div class="section-header">
+          <div>
+            <h2>API Integration Contracts</h2>
+            <p>Frontend contracts aligned with FastAPI service design.</p>
+          </div>
+        </div>
+        <ul class="api-list">
+          <li>POST /predict-carbon -> predict SOC, compute CO2, baseline, additionality, certification, credits, and revenue.</li>
+          <li>GET /analytics/correlation -> nutrient-SOC correlation matrix.</li>
+          <li>GET /analytics/trends -> SOC trend timeseries by plot/farmer/date range.</li>
+          <li>GET /analytics/farmer-performance -> credits and revenue per farmer.</li>
+          <li>GET /analytics/certification-status -> eligible vs non-eligible distribution.</li>
+        </ul>
+        <p class="footnote">This phase uses mock adapters that mirror endpoint payloads, so swapping to real FastAPI APIs later only changes the service layer.</p>
+      </div>
+    </section>
+
+    <section class="section reveal" style="animation-delay: 0.45s">
+      <div class="section-header">
+        <div>
+          <h2>Traceability Table</h2>
+          <p>Pipeline outputs stored as a Certification_Report-style dataset in the UI simulation layer.</p>
+        </div>
+        <button class="secondary" id="refreshTableBtn">Refresh Simulation</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Record ID</th>
+              <th>Farmer</th>
+              <th>Plot</th>
+              <th>SOC</th>
+              <th>CO2_eq (kg)</th>
+              <th>Baseline CO2 (kg)</th>
+              <th>Additional CO2 (kg)</th>
+              <th>Confidence</th>
+              <th>Final Credits</th>
+              <th>Revenue</th>
+              <th>Certification</th>
+            </tr>
+          </thead>
+          <tbody id="dataTable"></tbody>
+        </table>
+      </div>
+      <p class="footnote">RBAC behavior: Admin can trigger certification actions. Data Analyst can analyze and export but cannot trigger certification.</p>
+    </section>
+  </div>
+
+  <script>
+    const API_ENDPOINTS = {
+      predictCarbon: "/predict-carbon",
+      correlations: "/analytics/correlation",
+      trends: "/analytics/trends",
+      farmerPerformance: "/analytics/farmer-performance",
+      certificationStatus: "/analytics/certification-status"
+    };
+
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    const state = {
+      role: "admin",
+      selectedPlot: "Plot A",
+      selectedFarmer: "All",
+      records: [],
+      charts: {},
+      sensors: {
+        N: 57,
+        P: 29,
+        K: 64,
+        pH: 6.7,
+        Moisture: 42
+      }
+    };
+
+    const plots = [
+      {
+        id: "Plot A",
+        farmer: "Farmer Raina",
+        thresholdSoc: 2.4,
+        area: 12,
+        monthlySoc: [1.62, 1.69, 1.75, 1.82, 1.88, 1.94, 2.02, 2.1, 2.17, 2.21, 2.28, 2.35],
+        baselineHistoryCO2: [1012, 1046, 1091, 1122, 1104],
+        rmse: 0.05
+      },
+      {
+        id: "Plot B",
+        farmer: "Farmer Iqbal",
+        thresholdSoc: 2.1,
+        area: 10,
+        monthlySoc: [1.42, 1.47, 1.52, 1.56, 1.61, 1.67, 1.72, 1.77, 1.81, 1.87, 1.92, 1.98],
+        baselineHistoryCO2: [930, 942, 955, 968, 962],
+        rmse: 0.07
+      },
+      {
+        id: "Plot C",
+        farmer: "Farmer Leela",
+        thresholdSoc: 2.7,
+        area: 14,
+        monthlySoc: [1.88, 1.93, 2.0, 2.08, 2.13, 2.19, 2.25, 2.32, 2.38, 2.44, 2.52, 2.6],
+        baselineHistoryCO2: [1195, 1220, 1232, 1255, 1264],
+        rmse: 0.04
+      },
+      {
+        id: "Plot D",
+        farmer: "Farmer Anaya",
+        thresholdSoc: 1.95,
+        area: 8,
+        monthlySoc: [1.13, 1.19, 1.25, 1.29, 1.34, 1.4, 1.45, 1.5, 1.57, 1.61, 1.68, 1.74],
+        baselineHistoryCO2: [788, 804, 816, 822, 831],
+        rmse: 0.08
+      }
+    ];
+
+    const sensorDefs = [
+      { key: "N", label: "Nitrogen (N)", min: 0, max: 100, healthyMin: 35, healthyMax: 75, unit: "ppm" },
+      { key: "P", label: "Phosphorus (P)", min: 0, max: 80, healthyMin: 18, healthyMax: 45, unit: "ppm" },
+      { key: "K", label: "Potassium (K)", min: 0, max: 120, healthyMin: 40, healthyMax: 85, unit: "ppm" },
+      { key: "pH", label: "pH", min: 4.5, max: 8.5, healthyMin: 6, healthyMax: 7.5, unit: "" },
+      { key: "Moisture", label: "Moisture", min: 0, max: 100, healthyMin: 28, healthyMax: 58, unit: "%" }
+    ];
+
+    const beta = {
+      N: 0.01,
+      P: 0.008,
+      K: 0.006,
+      Moisture: 0.015,
+      pH: 0.28,
+      intercept: 0.85
+    };
+
+    const el = {
+      roleSelect: document.getElementById("roleSelect"),
+      roleBadge: document.getElementById("roleBadge"),
+      plotSelect: document.getElementById("plotSelect"),
+      farmerSelect: document.getElementById("farmerSelect"),
+      pricePerCredit: document.getElementById("pricePerCredit"),
+      bulkDensity: document.getElementById("bulkDensity"),
+      depth: document.getElementById("depth"),
+      area: document.getElementById("area"),
+      rmse: document.getElementById("rmse"),
+      nutrientGrid: document.getElementById("nutrientGrid"),
+      heatmapGrid: document.getElementById("heatmapGrid"),
+      calcGrid: document.getElementById("calcGrid"),
+      dataTable: document.getElementById("dataTable"),
+      totalCredits: document.getElementById("totalCredits"),
+      finalCredits: document.getElementById("finalCredits"),
+      totalRevenue: document.getElementById("totalRevenue"),
+      avgSoc: document.getElementById("avgSoc"),
+      eligibilityCount: document.getElementById("eligibilityCount"),
+      farmerCount: document.getElementById("farmerCount"),
+      liveClock: document.getElementById("liveClock"),
+      runCheckBtn: document.getElementById("runCheckBtn"),
+      eligibilityBadge: document.getElementById("eligibilityBadge"),
+      eligibilityDetails: document.getElementById("eligibilityDetails")
+    };
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function round(value, digits = 2) {
+      return Number(value.toFixed(digits));
+    }
+
+    function f(value, digits = 2) {
+      return round(value, digits).toFixed(digits);
+    }
+
+    function randomSpread(range) {
+      return (Math.random() - 0.5) * range * 2;
+    }
+
+    function estimateSoc(sensorValues) {
+      const raw = beta.intercept
+        + beta.N * sensorValues.N
+        + beta.P * sensorValues.P
+        + beta.K * sensorValues.K
+        + beta.Moisture * sensorValues.Moisture
+        + beta.pH * sensorValues.pH;
+      return clamp(raw, 0.7, 7.5);
+    }
+
+    function baselineCO2(plot) {
+      return plot.baselineHistoryCO2.reduce((sum, v) => sum + v, 0) / plot.baselineHistoryCO2.length;
+    }
+
+    function calculatePipelineInputs() {
+      return {
+        bulkDensity: Number(el.bulkDensity.value) || 1.25,
+        depth: Number(el.depth.value) || 30,
+        area: Number(el.area.value) || 12,
+        rmse: Number(el.rmse.value) || 0.06,
+        pricePerCredit: Number(el.pricePerCredit.value) || 22
+      };
+    }
+
+    function calculatePipeline({ soc, plot, inputs }) {
+      const socStock = soc * inputs.bulkDensity * inputs.depth * inputs.area;
+      const co2Eq = socStock * 3.67;
+      const baseCO2 = baselineCO2(plot);
+      const additionalCO2 = co2Eq - baseCO2;
+      const credits = Math.max(additionalCO2, 0) / 1000;
+      const meanSoc = plot.monthlySoc.reduce((sum, val) => sum + val, 0) / plot.monthlySoc.length;
+      const confidence = clamp(1 - (inputs.rmse / meanSoc), 0, 1);
+      const isEligible = additionalCO2 > 0 && confidence > 0.95;
+      const buffer = credits * 0.1;
+      const finalCredits = credits - buffer;
+      const revenue = finalCredits * inputs.pricePerCredit;
+      return {
+        soc,
+        socStock,
+        co2Eq,
+        baseCO2,
+        additionalCO2,
+        credits,
+        confidence,
+        isEligible,
+        buffer,
+        finalCredits,
+        revenue
+      };
+    }
+
+    function gaugeColor(value, def) {
+      if (value >= def.healthyMin && value <= def.healthyMax) {
+        return "linear-gradient(90deg,#4dd388,#2eb76d)";
+      }
+      if (value < def.healthyMin || value > def.healthyMax) {
+        return "linear-gradient(90deg,#efc061,#d89a3f)";
+      }
+      return "linear-gradient(90deg,#f07b70,#dc5f54)";
+    }
+
+    function statusForSensor(value, def) {
+      if (value >= def.healthyMin && value <= def.healthyMax) return "Healthy";
+      if (Math.abs(value - def.healthyMin) < (def.healthyMax - def.healthyMin) * 0.4 || Math.abs(value - def.healthyMax) < (def.healthyMax - def.healthyMin) * 0.4) {
+        return "Borderline";
+      }
+      return "Alert";
+    }
+
+    function currentPlot() {
+      return plots.find((p) => p.id === state.selectedPlot) || plots[0];
+    }
+
+    async function mockFetch(name, payload) {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      return { endpoint: API_ENDPOINTS[name], ...payload };
+    }
+
+    function initSelectors() {
+      el.plotSelect.innerHTML = plots.map((p) => `<option value="${p.id}">${p.id}</option>`).join("");
+      const farmers = ["All"].concat(Array.from(new Set(plots.map((p) => p.farmer))));
+      el.farmerSelect.innerHTML = farmers.map((name) => `<option value="${name}">${name}</option>`).join("");
+      el.plotSelect.value = state.selectedPlot;
+      el.farmerSelect.value = state.selectedFarmer;
+    }
+
+    function renderNutrients() {
+      el.nutrientGrid.innerHTML = sensorDefs.map((def) => {
+        const value = state.sensors[def.key];
+        const percent = clamp(((value - def.min) / (def.max - def.min)) * 100, 0, 100);
+        const status = statusForSensor(value, def);
+        return `
+          <article class="gauge">
+            <div class="gauge-top">
+              <strong>${def.label}</strong>
+              <span>${f(value, def.key === "pH" ? 2 : 1)} ${def.unit}</span>
+            </div>
+            <div class="bar-track"><div class="bar-fill" style="width:${percent}%;background:${gaugeColor(value, def)}"></div></div>
+            <div class="range">
+              <span>Min ${def.min}</span>
+              <span style="color:${status === "Healthy" ? "var(--success)" : status === "Borderline" ? "var(--warning)" : "var(--danger)"}">${status}</span>
+              <span>Max ${def.max}</span>
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function initHeatmap() {
+      const labels = ["N", "P", "K", "pH", "Moisture", "SOC"];
+      const matrix = [
+        [1.0, 0.61, 0.54, -0.16, 0.33, 0.69],
+        [0.61, 1.0, 0.41, -0.22, 0.27, 0.56],
+        [0.54, 0.41, 1.0, -0.14, 0.32, 0.51],
+        [-0.16, -0.22, -0.14, 1.0, -0.45, -0.28],
+        [0.33, 0.27, 0.32, -0.45, 1.0, 0.74],
+        [0.69, 0.56, 0.51, -0.28, 0.74, 1.0]
+      ];
+
+      const cells = [];
+      cells.push("<div></div>");
+      labels.forEach((label) => cells.push(`<div class="heatmap-cell heatmap-label">${label}</div>`));
+      labels.forEach((row, i) => {
+        cells.push(`<div class="heatmap-cell heatmap-label">${row}</div>`);
+        matrix[i].forEach((v) => {
+          const intensity = Math.abs(v);
+          const bg = v >= 0
+            ? `rgb(${Math.round(24 + 16 * (1 - intensity))}, ${Math.round(85 + 120 * intensity)}, ${Math.round(64 + 30 * intensity)})`
+            : `rgb(${Math.round(118 + 120 * intensity)}, ${Math.round(62 + 30 * (1 - intensity))}, 56)`;
+          cells.push(`<div class="heatmap-cell" style="background:${bg}" title="${row}: ${v.toFixed(2)}">${v.toFixed(2)}</div>`);
+        });
+      });
+      el.heatmapGrid.innerHTML = cells.join("");
+    }
+
+    function filteredPlots() {
+      return state.selectedFarmer === "All"
+        ? plots
+        : plots.filter((plot) => plot.farmer === state.selectedFarmer);
+    }
+
+    function buildRecords() {
+      const inputs = calculatePipelineInputs();
+      const activePlots = filteredPlots();
+      state.records = activePlots.map((plot, index) => {
+        const monthSoc = plot.monthlySoc[plot.monthlySoc.length - 1] + randomSpread(0.06);
+        const currentSoc = clamp(monthSoc, 0.7, 7.5);
+        const pipeline = calculatePipeline({ soc: currentSoc, plot, inputs });
+        return {
+          id: `CR-${String(index + 1).padStart(4, "0")}`,
+          farmer: plot.farmer,
+          plotId: plot.id,
+          ...pipeline
+        };
+      });
+      return state.records;
+    }
+
+    function renderCalcGrid(primary) {
+      const cards = [
+        ["SOC (%)", f(primary.soc, 2)],
+        ["SOC_stock", f(primary.socStock, 2)],
+        ["CO2_eq (kg)", f(primary.co2Eq, 2)],
+        ["Baseline CO2 (kg)", f(primary.baseCO2, 2)],
+        ["Additional CO2 (kg)", f(primary.additionalCO2, 2)],
+        ["Carbon Credits", f(primary.credits, 4)],
+        ["Confidence", `${f(primary.confidence * 100, 2)}%`],
+        ["Buffer (10%)", f(primary.buffer, 4)],
+        ["Revenue ($)", f(primary.revenue, 2)]
+      ];
+      el.calcGrid.innerHTML = cards.map(([label, value]) => `
+        <div class="calc-box">
+          <div class="label">${label}</div>
+          <div class="value">${value}</div>
+        </div>
+      `).join("");
+    }
+
+    function renderTable() {
+      el.dataTable.innerHTML = state.records.map((r) => {
+        const statusClass = r.isEligible ? "healthy" : (r.additionalCO2 > 0 ? "borderline" : "alert");
+        return `
+          <tr>
+            <td>${r.id}</td>
+            <td>${r.farmer}</td>
+            <td>${r.plotId}</td>
+            <td>${f(r.soc, 2)}</td>
+            <td>${f(r.co2Eq, 2)}</td>
+            <td>${f(r.baseCO2, 2)}</td>
+            <td>${f(r.additionalCO2, 2)}</td>
+            <td>${f(r.confidence * 100, 2)}%</td>
+            <td>${f(r.finalCredits, 4)}</td>
+            <td>$${f(r.revenue, 2)}</td>
+            <td class="table-status ${statusClass}">${r.isEligible ? "Eligible" : "Not Eligible"}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function updateSummary(records) {
+      const totalCredits = records.reduce((sum, r) => sum + r.credits, 0);
+      const finalCredits = records.reduce((sum, r) => sum + r.finalCredits, 0);
+      const totalRevenue = records.reduce((sum, r) => sum + r.revenue, 0);
+      const avgSoc = records.reduce((sum, r) => sum + r.soc, 0) / Math.max(records.length, 1);
+      const eligible = records.filter((r) => r.isEligible).length;
+
+      el.totalCredits.textContent = f(totalCredits, 3);
+      el.finalCredits.textContent = f(finalCredits, 3);
+      el.totalRevenue.textContent = `$${f(totalRevenue, 2)}`;
+      el.avgSoc.textContent = `${f(avgSoc, 2)}%`;
+      el.eligibilityCount.textContent = `${eligible} / ${records.length}`;
+      el.farmerCount.textContent = String(new Set(records.map((r) => r.farmer)).size);
+      el.liveClock.textContent = `LIVE PIPELINE SIMULATION | ${new Date().toLocaleTimeString()}`;
+    }
+
+    function chartTextColor() {
+      return "#c9dbc9";
+    }
+
+    function chartGridColor() {
+      return "rgba(180,210,180,0.12)";
+    }
+
+    function buildCharts(records) {
+      const plot = currentPlot();
+      const primary = records.find((r) => r.plotId === plot.id) || records[0];
+      const eligibleCount = records.filter((r) => r.isEligible).length;
+      const ineligibleCount = records.length - eligibleCount;
+
+      const farmerGroups = records.reduce((map, row) => {
+        if (!map[row.farmer]) {
+          map[row.farmer] = 0;
+        }
+        map[row.farmer] += row.finalCredits;
+        return map;
+      }, {});
+
+      const chartDefaults = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color: chartTextColor() } },
+          tooltip: {
+            backgroundColor: "#0f1f17",
+            titleColor: "#ecf8eb",
+            bodyColor: "#d2e6d1",
+            borderColor: "rgba(166, 215, 162, 0.25)",
+            borderWidth: 1
+          }
+        },
+        scales: {
+          x: { ticks: { color: chartTextColor() }, grid: { color: chartGridColor() } },
+          y: { ticks: { color: chartTextColor() }, grid: { color: chartGridColor() } }
+        }
+      };
+
+      const trendCtx = document.getElementById("socTrendChart").getContext("2d");
+      if (!state.charts.trend) {
+        state.charts.trend = new Chart(trendCtx, {
+          type: "line",
+          data: {
+            labels: months,
+            datasets: [
+              {
+                label: "SOC (%)",
+                data: plot.monthlySoc,
+                borderColor: "#87d39a",
+                backgroundColor: "rgba(135,211,154,0.16)",
+                borderWidth: 3,
+                fill: true,
+                tension: 0.3,
+                pointRadius: 3
+              },
+              {
+                label: "Threshold",
+                data: months.map(() => plot.thresholdSoc),
+                borderColor: "#c7a25f",
+                borderDash: [6, 4],
+                borderWidth: 2,
+                pointRadius: 0,
+                fill: false
+              }
+            ]
+          },
+          options: chartDefaults
+        });
+      } else {
+        state.charts.trend.data.datasets[0].data = plot.monthlySoc;
+        state.charts.trend.data.datasets[1].data = months.map(() => plot.thresholdSoc);
+        state.charts.trend.update();
+      }
+
+      const addCtx = document.getElementById("additionalityChart").getContext("2d");
+      if (!state.charts.additionality) {
+        state.charts.additionality = new Chart(addCtx, {
+          type: "bar",
+          data: {
+            labels: [plot.id],
+            datasets: [
+              {
+                label: "Baseline CO2",
+                data: [primary.baseCO2],
+                backgroundColor: "rgba(199, 162, 95, 0.74)",
+                borderRadius: 8
+              },
+              {
+                label: "Current CO2",
+                data: [primary.co2Eq],
+                backgroundColor: "rgba(135, 211, 154, 0.78)",
+                borderRadius: 8
+              }
+            ]
+          },
+          options: chartDefaults
+        });
+      } else {
+        state.charts.additionality.data.labels = [plot.id];
+        state.charts.additionality.data.datasets[0].data = [primary.baseCO2];
+        state.charts.additionality.data.datasets[1].data = [primary.co2Eq];
+        state.charts.additionality.update();
+      }
+
+      const farmerCtx = document.getElementById("farmerChart").getContext("2d");
+      if (!state.charts.farmer) {
+        state.charts.farmer = new Chart(farmerCtx, {
+          type: "bar",
+          data: {
+            labels: Object.keys(farmerGroups),
+            datasets: [{
+              label: "Final Credits",
+              data: Object.values(farmerGroups),
+              backgroundColor: "rgba(121, 191, 111, 0.84)",
+              borderRadius: 8
+            }]
+          },
+          options: chartDefaults
+        });
+      } else {
+        state.charts.farmer.data.labels = Object.keys(farmerGroups);
+        state.charts.farmer.data.datasets[0].data = Object.values(farmerGroups);
+        state.charts.farmer.update();
+      }
+
+      const certCtx = document.getElementById("certificationChart").getContext("2d");
+      if (!state.charts.cert) {
+        state.charts.cert = new Chart(certCtx, {
+          type: "pie",
+          data: {
+            labels: ["Eligible", "Not Eligible"],
+            datasets: [{
+              data: [eligibleCount, ineligibleCount],
+              backgroundColor: ["rgba(138, 233, 161, 0.88)", "rgba(240, 123, 112, 0.84)"],
+              borderColor: ["rgba(138, 233, 161, 1)", "rgba(240, 123, 112, 1)"],
+              borderWidth: 1.5
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { labels: { color: chartTextColor() } },
+              tooltip: {
+                backgroundColor: "#0f1f17",
+                titleColor: "#ecf8eb",
+                bodyColor: "#d2e6d1"
+              }
+            }
+          }
+        });
+      } else {
+        state.charts.cert.data.datasets[0].data = [eligibleCount, ineligibleCount];
+        state.charts.cert.update();
+      }
+    }
+
+    function updateRoleUI() {
+      const admin = state.role === "admin";
+      el.roleBadge.textContent = admin
+        ? "ROLE: Admin / Certifying Authority"
+        : "ROLE: Data Analyst (Read-only + Analytics)";
+
+      document.querySelectorAll("[data-admin-only]").forEach((node) => {
+        node.classList.toggle("hidden", !admin);
+        if ("disabled" in node) {
+          node.disabled = !admin;
+        }
+      });
+
+      if (!admin) {
+        el.eligibilityBadge.textContent = "ANALYST MODE";
+        el.eligibilityBadge.className = "badge amber";
+        el.eligibilityDetails.textContent = "Read-only analytical access active. Certification trigger is restricted to Admin role.";
+      }
+    }
+
+    function runCertification(records) {
+      const plot = currentPlot();
+      const focus = records.find((r) => r.plotId === plot.id) || records[0];
+      const eligible = focus.isEligible;
+      el.eligibilityBadge.textContent = eligible ? "ELIGIBLE" : "NOT ELIGIBLE";
+      el.eligibilityBadge.className = eligible ? "badge green" : "badge red";
+      el.eligibilityDetails.textContent = `Plot ${focus.plotId}: additional CO2 ${f(focus.additionalCO2, 2)} kg | confidence ${f(focus.confidence * 100, 2)}% | final credits ${f(focus.finalCredits, 4)}`;
+    }
+
+    function exportCsv() {
+      if (!state.records.length) {
+        return;
+      }
+      const headers = [
+        "Record ID", "Farmer", "Plot", "SOC", "CO2_eq", "Baseline CO2", "Additional CO2", "Confidence", "Final Credits", "Revenue", "Certification"
+      ];
+      const csvRows = state.records.map((r) => [
+        r.id,
+        r.farmer,
+        r.plotId,
+        f(r.soc, 2),
+        f(r.co2Eq, 2),
+        f(r.baseCO2, 2),
+        f(r.additionalCO2, 2),
+        `${f(r.confidence * 100, 2)}%`,
+        f(r.finalCredits, 4),
+        f(r.revenue, 2),
+        r.isEligible ? "Eligible" : "Not Eligible"
+      ]);
+
+      const csv = [headers, ...csvRows]
+        .map((row) => row.map((item) => `"${String(item).replace(/"/g, '""')}"`).join(","))
+        .join("\n");
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `carbon-report-${new Date().toISOString().replace(/[:.]/g, "-")}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function nudgeSensors() {
+      sensorDefs.forEach((def) => {
+        const spread = def.key === "pH" ? 0.08 : def.max * 0.015;
+        state.sensors[def.key] = clamp(state.sensors[def.key] + randomSpread(spread), def.min, def.max);
+      });
+      renderAll();
+    }
+
+    async function renderAll() {
+      renderNutrients();
+      const records = buildRecords();
+      await mockFetch("predictCarbon", { records });
+      updateSummary(records);
+      renderCalcGrid(records[0]);
+      renderTable();
+      buildCharts(records);
+    }
+
+    function wireEvents() {
+      el.roleSelect.addEventListener("change", () => {
+        state.role = el.roleSelect.value;
+        updateRoleUI();
+      });
+
+      el.plotSelect.addEventListener("change", () => {
+        state.selectedPlot = el.plotSelect.value;
+        const plot = currentPlot();
+        el.area.value = plot.area;
+        el.rmse.value = plot.rmse;
+        renderAll();
+      });
+
+      el.farmerSelect.addEventListener("change", () => {
+        state.selectedFarmer = el.farmerSelect.value;
+        renderAll();
+      });
+
+      [el.pricePerCredit, el.bulkDensity, el.depth, el.area, el.rmse].forEach((input) => {
+        input.addEventListener("input", () => {
+          renderAll();
+        });
+      });
+
+      document.getElementById("nudgeSensorsBtn").addEventListener("click", nudgeSensors);
+      document.getElementById("refreshTableBtn").addEventListener("click", renderAll);
+      document.getElementById("exportTableBtn").addEventListener("click", exportCsv);
+
+      el.runCheckBtn.addEventListener("click", () => {
+        if (state.role !== "admin") {
+          return;
+        }
+        runCertification(state.records);
+      });
+    }
+
+    function bootstrap() {
+      initSelectors();
+      initHeatmap();
+      wireEvents();
+      updateRoleUI();
+
+      const plot = currentPlot();
+      el.area.value = plot.area;
+      el.rmse.value = plot.rmse;
+
+      renderAll();
+      setInterval(() => {
+        nudgeSensors();
+      }, 4000);
+    }
+
+    bootstrap();
+  </script>
+</body>
+</html>

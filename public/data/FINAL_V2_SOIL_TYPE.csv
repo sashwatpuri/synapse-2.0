@@ -1,0 +1,4 @@
+soil_type_id,type_name,carbon_retention_capacity
+1,Clay,0.85
+2,Sandy,0.4
+3,Loamy,0.7
