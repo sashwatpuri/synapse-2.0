@@ -1,3 +1,5 @@
+import { useMemo, useState } from "react";
+
 export function FarmerManagementSection({
   role,
   farmers,
@@ -11,7 +13,8 @@ export function FarmerManagementSection({
   onSelectAdminFarmer,
   onNewFarmerInputChange,
   onCreateFarmer,
-  onUpdateFarmer
+  onUpdateFarmer,
+  onPreviewCertificate
 }) {
   const createAndReset = () => {
     const result = onCreateFarmer();
@@ -21,6 +24,12 @@ export function FarmerManagementSection({
       window.alert(result.message);
     }
   };
+
+  const [showAllFarmers, setShowAllFarmers] = useState(false);
+  const visibleFarmers = useMemo(
+    () => showAllFarmers ? farmers : farmers.slice(0, 8),
+    [farmers, showAllFarmers]
+  );
 
   return (
     <section className="layout">
@@ -43,7 +52,7 @@ export function FarmerManagementSection({
           </label>
 
           <div className="farmer-list">
-            {farmers.map((farmer) => (
+            {visibleFarmers.map((farmer) => (
               <button
                 key={farmer.farmer_id}
                 className={`farmer-list-item ${activeFarmer?.farmer_id === farmer.farmer_id ? "active" : ""}`}
@@ -57,8 +66,26 @@ export function FarmerManagementSection({
             ))}
           </div>
 
-          <div className="subsection">
-            <h3>Create Farmer</h3>
+          {farmers.length > 8 ? (
+            <div className="directory-actions">
+              <span className="metric-sub">
+                Showing {visibleFarmers.length} of {farmers.length} farmers
+              </span>
+              <button className="secondary" onClick={() => setShowAllFarmers((value) => !value)}>
+                {showAllFarmers ? "Show Less" : "Show All"}
+              </button>
+            </div>
+          ) : null}
+
+          <details className="subsection collapsible-panel">
+            <summary className="subsection-summary">
+              <div>
+                <h3>Create Farmer</h3>
+                <p className="metric-sub">Add a new farmer record only when required.</p>
+              </div>
+              <span className="badge amber">Collapsible</span>
+            </summary>
+
             <div className="form-grid">
               <label className="control">
                 Full name
@@ -94,7 +121,7 @@ export function FarmerManagementSection({
               <input value={newFarmerForm.notes} onChange={(event) => onNewFarmerInputChange("notes", event.target.value)} />
             </label>
             <button onClick={createAndReset}>Create Farmer Profile</button>
-          </div>
+          </details>
         </div>
       ) : null}
 
@@ -210,32 +237,49 @@ export function FarmerManagementSection({
             </div>
 
             {role === "farmer" && activeFarmerRecords.length ? (
-              <div className="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Record ID</th>
-                      <th>Plot</th>
-                      <th>Period</th>
-                      <th>Final Credits</th>
-                      <th>Revenue (Rs)</th>
-                      <th>Certification</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {activeFarmerRecords.map((record) => (
-                      <tr key={record.id}>
-                        <td>{record.id}</td>
-                        <td>{record.plotId}</td>
-                        <td>{record.periodStart} to {record.periodEnd}</td>
-                        <td>{record.finalCredits.toFixed(4)}</td>
-                        <td>{record.revenue.toFixed(2)}</td>
-                        <td>{record.isEligible ? "Eligible" : "Not Eligible"}</td>
+              <>
+                <div className="section-header section-subheader">
+                  <div>
+                    <h2>Certificate History</h2>
+                    <p>Issued and pending certificates attached to your records.</p>
+                  </div>
+                </div>
+
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Certificate ID</th>
+                        <th>Record ID</th>
+                        <th>Plot</th>
+                        <th>Status</th>
+                        <th>Issued On</th>
+                        <th>Valid Until</th>
+                        <th>Final Credits</th>
+                        <th>Preview</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {activeFarmerRecords.map((record) => (
+                        <tr key={record.id}>
+                          <td>{record.certificateId}</td>
+                          <td>{record.id}</td>
+                          <td>{record.plotId}</td>
+                          <td>{record.certificateStatus}</td>
+                          <td>{record.certificateIssuedOn || "-"}</td>
+                          <td>{record.certificateValidUntil || "-"}</td>
+                          <td>{record.finalCredits.toFixed(4)}</td>
+                          <td>
+                            <button className="secondary inline-button" onClick={() => onPreviewCertificate?.(record)}>
+                              View
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             ) : null}
 
             <div className="table-wrap">

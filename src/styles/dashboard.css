@@ -29,9 +29,9 @@ html, body, #root {
   color: var(--text);
   font-family: "Sora", "Segoe UI", sans-serif;
   background:
-    radial-gradient(circle at 8% 8%, rgba(135, 211, 154, 0.18), transparent 34%),
-    radial-gradient(circle at 90% 0%, rgba(199, 162, 95, 0.18), transparent 29%),
-    linear-gradient(180deg, var(--bg-2), var(--bg));
+    radial-gradient(circle at 12% 6%, rgba(135, 211, 154, 0.28), transparent 30%),
+    radial-gradient(circle at 88% 4%, rgba(199, 162, 95, 0.22), transparent 26%),
+    linear-gradient(180deg, #173124 0%, #102117 28%, #09140f 62%, #050b08 100%);
 }
 
 body {
@@ -165,6 +165,100 @@ body {
   background: linear-gradient(180deg, rgba(17, 36, 27, 0.98), rgba(10, 20, 15, 0.98));
   box-shadow: var(--shadow);
   padding: 18px;
+}
+
+.certificate-modal {
+  width: min(980px, 100%);
+}
+
+.certificate-sheet {
+  border: 1px solid rgba(199, 162, 95, 0.32);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top right, rgba(199, 162, 95, 0.16), transparent 28%),
+    linear-gradient(180deg, rgba(24, 47, 35, 0.98), rgba(13, 24, 19, 0.98));
+  padding: 22px;
+}
+
+.certificate-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.certificate-banner h1 {
+  margin: 0;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.6rem;
+}
+
+.certificate-banner p {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+
+.certificate-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.certificate-block {
+  border: 1px solid rgba(167, 214, 162, 0.16);
+  border-radius: 14px;
+  background: rgba(8, 18, 13, 0.72);
+  padding: 12px;
+  display: grid;
+  gap: 6px;
+}
+
+.certificate-block span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.certificate-block strong {
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.certificate-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.certificate-note {
+  border: 1px solid rgba(167, 214, 162, 0.16);
+  border-radius: 14px;
+  background: rgba(8, 18, 13, 0.62);
+  padding: 14px;
+  margin-bottom: 16px;
+}
+
+.certificate-note strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.certificate-note p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.certificate-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .reveal {
@@ -394,6 +488,10 @@ button:disabled {
   margin: 0;
 }
 
+.section-subheader {
+  margin-top: 18px;
+}
+
 .sql-panel {
   border: 1px solid rgba(167, 214, 162, 0.18);
   border-radius: 14px;
@@ -412,6 +510,29 @@ button:disabled {
 .subsection h3 {
   margin: 0;
   font-size: 0.92rem;
+}
+
+.collapsible-panel {
+  border: 1px solid rgba(167, 214, 162, 0.12);
+  border-radius: 16px;
+  padding: 12px;
+}
+
+.subsection-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.subsection-summary::-webkit-details-marker {
+  display: none;
+}
+
+.collapsible-panel[open] .subsection-summary {
+  margin-bottom: 12px;
 }
 
 .sql-summary {
@@ -669,6 +790,15 @@ tbody tr:nth-child(even) {
   margin-top: 12px;
 }
 
+.directory-actions {
+  margin-top: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .farmer-list-item {
   width: 100%;
   text-align: left;
@@ -708,7 +838,9 @@ tbody tr:nth-child(even) {
 
   .form-grid,
   .profile-grid,
-  .info-cards {
+  .info-cards,
+  .certificate-grid,
+  .certificate-metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -730,7 +862,9 @@ tbody tr:nth-child(even) {
   .calc-grid,
   .form-grid,
   .profile-grid,
-  .info-cards {
+  .info-cards,
+  .certificate-grid,
+  .certificate-metrics {
     grid-template-columns: 1fr;
   }
 

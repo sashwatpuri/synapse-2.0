@@ -12,8 +12,10 @@ import {
   clearSession,
   createFarmerAccount,
   ensureAccounts,
+  buildNextAppState,
   loadAppState,
   loadSession,
+  mergeCertificates,
   mergeFarmers,
   saveAppState,
   saveSession,
@@ -63,6 +65,7 @@ export function useDashboardData() {
   const [newFarmerForm, setNewFarmerForm] = useState(emptyFarmerForm);
   const [inputs, setInputs] = useState(initialInputs);
   const [sensors, setSensors] = useState(initialSensors);
+  const [appStateVersion, setAppStateVersion] = useState(0);
   const [eligibilityState, setEligibilityState] = useState({
     label: "PENDING REVIEW",
     className: "amber",
@@ -100,7 +103,10 @@ export function useDashboardData() {
           setSelectedAdminFarmerId(String(mergedFarmers[0].farmer_id));
         }
 
-        saveAppState(upsertFarmerState(mergedFarmers, accountState));
+        saveAppState({
+          ...upsertFarmerState(mergedFarmers, accountState),
+          certificateOverrides: appState.certificateOverrides || {}
+        });
       } catch (error) {
         if (!active) return;
         setLoadError(error instanceof Error ? error.message : "Failed to load database files");
@@ -118,9 +124,14 @@ export function useDashboardData() {
   }, [selectedAdminFarmerId]);
 
   useEffect(() => {
-    if (!farmersState.length || !accounts.length) return;
-    saveAppState(upsertFarmerState(farmersState, accounts));
-  }, [accounts, farmersState]);
+    if (!farmersState.length || !accounts.length || !db) return;
+    const currentState = loadAppState();
+    const mergedRecords = mergeCertificates(
+      db.certificationReports.map((report) => ({ reportId: report.report_id })),
+      currentState
+    );
+    saveAppState(buildNextAppState({ farmers: farmersState, accounts, certificates: mergedRecords }));
+  }, [accounts, db, farmersState]);
 
   const user = useMemo(() => {
     if (!session) return null;
@@ -223,7 +234,7 @@ export function useDashboardData() {
       return acc;
     }, {});
 
-    return db.certificationReports
+    const baseRecords = db.certificationReports
       .filter((report) => allowedPlotIds.has(report.land_id))
       .map((report) => {
         const plot = plotById.get(report.land_id);
@@ -272,7 +283,10 @@ export function useDashboardData() {
           revenue
         };
       });
-  }, [db, farmerById, filteredPlots, inputs.depth, inputs.pricePerCredit, plotById, soilById]);
+
+    const appState = loadAppState();
+    return mergeCertificates(baseRecords, appState);
+  }, [appStateVersion, db, farmerById, filteredPlots, inputs.depth, inputs.pricePerCredit, plotById, soilById]);
 
   const selectedRecord = useMemo(
     () => records.find((record) => record.plotId === selectedPlot) || records[0] || null,
@@ -545,12 +559,38 @@ export function useDashboardData() {
   const runCertification = useCallback(() => {
     if (role !== "admin" || !selectedRecord) return;
     const eligible = selectedRecord.isEligible;
+    if (!eligible) {
+      setEligibilityState({
+        label: "ISSUANCE BLOCKED",
+        className: "red",
+        details: `Plot ${selectedRecord.plotId}: certificate cannot be issued because the selected record is not eligible.`
+      });
+      return;
+    }
+    const issuedOn = new Date();
+    const validUntil = new Date(issuedOn);
+    validUntil.setFullYear(validUntil.getFullYear() + 1);
+
+    const nextRecords = records.map((record) => (
+      record.reportId === selectedRecord.reportId
+        ? {
+            ...record,
+            certificateStatus: "ISSUED",
+            certificateIssuedOn: issuedOn.toISOString().slice(0, 10),
+            certificateValidUntil: validUntil.toISOString().slice(0, 10),
+            approvalNotes: "Approved for issuance after eligibility review."
+          }
+        : record
+    ));
+    saveAppState(buildNextAppState({ farmers: farmersState, accounts, certificates: nextRecords }));
+    setAppStateVersion((value) => value + 1);
+
     setEligibilityState({
-      label: eligible ? "ELIGIBLE" : "NOT ELIGIBLE",
-      className: eligible ? "green" : "red",
-      details: `Plot ${selectedRecord.plotId}: additional CO2 ${formatNumber(selectedRecord.additionalCO2, 2)} kg | confidence ${formatNumber(selectedRecord.confidence * 100, 2)}% | final credits ${formatNumber(selectedRecord.finalCredits, 4)}`
+      label: "CERTIFICATE ISSUED",
+      className: "green",
+      details: `Plot ${selectedRecord.plotId}: certificate issued | final credits ${formatNumber(selectedRecord.finalCredits, 4)} | verification ${selectedRecord.verificationCode}`
     });
-  }, [role, selectedRecord]);
+  }, [accounts, farmersState, records, role, selectedRecord]);
 
   const login = useCallback((username, password) => {
     const matched = accounts.find((account) => account.username === username && account.password === password);
@@ -674,6 +714,32 @@ export function useDashboardData() {
     };
   }, [accounts, db, farmerById, records, soilById]);
 
+  const updateCertificate = useCallback((reportId, updates) => {
+    if (role !== "admin") return;
+    const targetRecord = records.find((record) => record.reportId === reportId);
+    if (!targetRecord) return;
+    if (updates.certificateStatus === "ISSUED" && !targetRecord.isEligible) {
+      setEligibilityState({
+        label: "ISSUANCE BLOCKED",
+        className: "red",
+        details: `Certificate ${targetRecord.certificateId} cannot move to ISSUED because the record is not eligible.`
+      });
+      return;
+    }
+    const nextRecords = records.map((record) => (
+      record.reportId === reportId ? { ...record, ...updates } : record
+    ));
+    saveAppState(buildNextAppState({ farmers: farmersState, accounts, certificates: nextRecords }));
+    setAppStateVersion((value) => value + 1);
+    if (selectedRecord?.reportId === reportId) {
+      setEligibilityState({
+        label: updates.certificateStatus || selectedRecord.certificateStatus,
+        className: updates.certificateStatus === "ISSUED" ? "green" : "amber",
+        details: `Certificate ${updates.certificateId || selectedRecord.certificateId} updated for plot ${selectedRecord.plotId}.`
+      });
+    }
+  }, [accounts, farmersState, records, role, selectedRecord]);
+
   const farmerOptions = useMemo(() => {
     if (role === "farmer") {
       return visibleFarmers.map((farmer) => ({
@@ -762,6 +828,7 @@ export function useDashboardData() {
     activeFarmerRecords,
     activeFarmerAccount,
     getFarmerProfile,
+    updateCertificate,
     newFarmerForm,
     authHints,
     login,

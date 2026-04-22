@@ -44,7 +44,8 @@ function buildFarmerAccount(farmer) {
 export function loadAppState() {
   return readJson(APP_STATE_KEY, {
     farmerOverrides: {},
-    farmerAccounts: []
+    farmerAccounts: [],
+    certificateOverrides: {}
   });
 }
 
@@ -129,6 +130,53 @@ export function upsertFarmerState(farmers, accounts) {
       return acc;
     }, {}),
     farmerAccounts: accounts.filter((account) => account.role === "farmer")
+  };
+}
+
+export function mergeCertificates(records, state) {
+  const overrides = state.certificateOverrides || {};
+
+  return records.map((record) => {
+    const override = overrides[record.reportId] || {};
+    return {
+      ...record,
+      certificateId: override.certificateId || `CERT-2026-${String(record.reportId).padStart(6, "0")}`,
+      certificateStatus: override.certificateStatus || "DRAFT",
+      certificateIssuedOn: override.certificateIssuedOn || null,
+      certificateValidUntil: override.certificateValidUntil || null,
+      verifierName: override.verifierName || "Admin Authority",
+      approvalNotes: override.approvalNotes || "",
+      verificationCode: override.verificationCode || `VC-${String(record.reportId).padStart(8, "0")}`
+    };
+  });
+}
+
+export function buildNextAppState({ farmers, accounts, certificates }) {
+  return {
+    farmerOverrides: farmers.reduce((acc, farmer) => {
+      acc[farmer.farmer_id] = {
+        public_farmer_uid: farmer.public_farmer_uid,
+        status: farmer.status,
+        village: farmer.village || "",
+        notes: farmer.notes || "",
+        created_at: farmer.created_at || new Date().toISOString(),
+        updated_at: farmer.updated_at || null
+      };
+      return acc;
+    }, {}),
+    farmerAccounts: accounts.filter((account) => account.role === "farmer"),
+    certificateOverrides: certificates.reduce((acc, record) => {
+      acc[record.reportId] = {
+        certificateId: record.certificateId,
+        certificateStatus: record.certificateStatus,
+        certificateIssuedOn: record.certificateIssuedOn,
+        certificateValidUntil: record.certificateValidUntil,
+        verifierName: record.verifierName,
+        approvalNotes: record.approvalNotes,
+        verificationCode: record.verificationCode
+      };
+      return acc;
+    }, {})
   };
 }
 

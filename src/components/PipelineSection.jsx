@@ -1,5 +1,16 @@
-export function PipelineSection({ role, inputs, onInputChange, calcCards, eligibilityState, onRunCertification }) {
+export function PipelineSection({ role, inputs, onInputChange, calcCards, eligibilityState, selectedRecord, onRunCertification }) {
   const isAdmin = role === "admin";
+  const eligibilityBadge = selectedRecord
+    ? {
+        label: selectedRecord.isEligible ? "ELIGIBLE" : "NOT ELIGIBLE",
+        className: selectedRecord.isEligible ? "green" : "red",
+        details: `Plot ${selectedRecord.plotId} | additional CO2 ${selectedRecord.additionalCO2.toFixed(2)} kg | confidence ${(selectedRecord.confidence * 100).toFixed(2)}%`
+      }
+    : {
+        label: "UNKNOWN",
+        className: "amber",
+        details: "No certification record selected."
+      };
 
   return (
     <div className="section reveal" style={{ animationDelay: "0.39s" }}>
@@ -39,6 +50,11 @@ export function PipelineSection({ role, inputs, onInputChange, calcCards, eligib
             <div className="value">{item.value}</div>
           </div>
         ))}
+      </div>
+
+      <div className="eligibility-row">
+        <span className={`badge ${eligibilityBadge.className}`}>Eligibility: {eligibilityBadge.label}</span>
+        <span className="metric-sub">{eligibilityBadge.details}</span>
       </div>
 
       <div className="eligibility-row">

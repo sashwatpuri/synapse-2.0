@@ -13,6 +13,8 @@ import {
 } from "chart.js";
 import { Bar, Line, Pie } from "react-chartjs-2";
 import { AuthPanel } from "./components/AuthPanel";
+import { CertificatePanel } from "./components/CertificatePanel";
+import { CertificatePreviewModal } from "./components/CertificatePreviewModal";
 import { FarmerManagementSection } from "./components/FarmerManagementSection";
 import { FarmerDetailsModal } from "./components/FarmerDetailsModal";
 import { HeroHeader } from "./components/HeroHeader";
@@ -90,6 +92,7 @@ export default function App() {
   } = useDashboardData();
 
   const [modalFarmerId, setModalFarmerId] = useState(null);
+  const [previewRecord, setPreviewRecord] = useState(null);
 
   if (!user) {
     return <AuthPanel authHints={authHints} onLogin={login} />;
@@ -103,6 +106,7 @@ export default function App() {
     <div className="dashboard">
       <HeroHeader user={user} liveClockText={liveClockText} />
       {isAdmin ? <FarmerDetailsModal profile={modalProfile} onClose={() => setModalFarmerId(null)} /> : null}
+      <CertificatePreviewModal record={previewRecord} onClose={() => setPreviewRecord(null)} />
 
       <Toolbar
         user={user}
@@ -118,10 +122,7 @@ export default function App() {
         onExport={() => exportRecordsCsv(records)}
         onExportPdf={() => exportCertificationPdf({
           selectedRecord,
-          records,
-          summary,
-          role,
-          pricePerCredit: inputs.pricePerCredit
+          role
         })}
         onLogout={logout}
       />
@@ -165,6 +166,7 @@ export default function App() {
                 onNewFarmerInputChange={onNewFarmerInputChange}
                 onCreateFarmer={createFarmer}
                 onUpdateFarmer={updateFarmer}
+                onPreviewCertificate={setPreviewRecord}
               />
             </div>
 
@@ -231,9 +233,18 @@ export default function App() {
                 onInputChange={onInputChange}
                 calcCards={calcCards}
                 eligibilityState={eligibilityState}
+                selectedRecord={selectedRecord}
                 onRunCertification={runCertification}
               />
             </section>
+
+            <div>
+              <CertificatePanel
+                selectedRecord={selectedRecord}
+                onExportCertificate={() => exportCertificationPdf({ selectedRecord, role })}
+                onPreviewCertificate={() => setPreviewRecord(selectedRecord)}
+              />
+            </div>
 
             <section id="admin-analytics" className="layout">
               <HeatmapSection heatmapData={heatmapData} />
@@ -264,6 +275,7 @@ export default function App() {
             onNewFarmerInputChange={onNewFarmerInputChange}
             onCreateFarmer={createFarmer}
             onUpdateFarmer={updateFarmer}
+            onPreviewCertificate={setPreviewRecord}
           />
 
           <SummaryCards summary={summary} />
@@ -298,6 +310,7 @@ export default function App() {
               onInputChange={onInputChange}
               calcCards={calcCards}
               eligibilityState={eligibilityState}
+              selectedRecord={selectedRecord}
               onRunCertification={runCertification}
             />
           </section>
