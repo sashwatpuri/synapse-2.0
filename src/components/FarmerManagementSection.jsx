@@ -169,24 +169,30 @@ export function FarmerManagementSection({
                   <option value="INACTIVE">Inactive</option>
                 </select>
               </label>
-              <label className="control">
-                Login Username
-                <input value={activeFarmerAccount?.username || "-"} readOnly />
-              </label>
-              <label className="control">
-                Login Password
-                <input value={activeFarmerAccount?.password || "-"} readOnly />
-              </label>
+              {role === "admin" ? (
+                <label className="control">
+                  Login Username
+                  <input value={activeFarmerAccount?.username || "-"} readOnly />
+                </label>
+              ) : null}
+              {role === "admin" ? (
+                <label className="control">
+                  Login Password
+                  <input value={activeFarmerAccount?.password || "-"} readOnly />
+                </label>
+              ) : null}
             </div>
 
-            <label className="control">
-              Notes
-              <input
-                value={activeFarmer.notes || ""}
-                readOnly={role !== "admin"}
-                onChange={(event) => onUpdateFarmer(activeFarmer.farmer_id, { notes: event.target.value })}
-              />
-            </label>
+            {role === "admin" ? (
+              <label className="control">
+                Notes
+                <input
+                  value={activeFarmer.notes || ""}
+                  readOnly={role !== "admin"}
+                  onChange={(event) => onUpdateFarmer(activeFarmer.farmer_id, { notes: event.target.value })}
+                />
+              </label>
+            ) : null}
 
             <div className="mini-stats">
               <div className="calc-box">
@@ -202,6 +208,35 @@ export function FarmerManagementSection({
                 <div className="value">{activeFarmer.status}</div>
               </div>
             </div>
+
+            {role === "farmer" && activeFarmerRecords.length ? (
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Record ID</th>
+                      <th>Plot</th>
+                      <th>Period</th>
+                      <th>Final Credits</th>
+                      <th>Revenue (Rs)</th>
+                      <th>Certification</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {activeFarmerRecords.map((record) => (
+                      <tr key={record.id}>
+                        <td>{record.id}</td>
+                        <td>{record.plotId}</td>
+                        <td>{record.periodStart} to {record.periodEnd}</td>
+                        <td>{record.finalCredits.toFixed(4)}</td>
+                        <td>{record.revenue.toFixed(2)}</td>
+                        <td>{record.isEligible ? "Eligible" : "Not Eligible"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
 
             <div className="table-wrap">
               <table>

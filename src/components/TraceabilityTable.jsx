@@ -1,12 +1,14 @@
 import { formatNumber } from "../services/carbonService";
 
 export function TraceabilityTable({ records, onRefresh, onSelectFarmer }) {
+  const isAdmin = Boolean(onSelectFarmer);
+
   return (
     <section className="section reveal" style={{ animationDelay: "0.45s" }}>
       <div className="section-header">
         <div>
           <h2>Traceability Table</h2>
-          <p>Each record is tied to a farmer profile, plot, certification status, and revenue outcome.</p>
+          <p>{isAdmin ? "Each record is tied to a farmer profile, plot, certification status, and revenue outcome." : "Your certification and carbon records for the selected plot."}</p>
         </div>
         <button className="secondary" onClick={onRefresh}>Refresh Simulation</button>
       </div>
@@ -25,7 +27,7 @@ export function TraceabilityTable({ records, onRefresh, onSelectFarmer }) {
               <th>Final Credits</th>
               <th>Revenue (Rs)</th>
               <th>Certification</th>
-              <th>Access</th>
+              {isAdmin ? <th>Access</th> : null}
             </tr>
           </thead>
           <tbody>
@@ -43,11 +45,13 @@ export function TraceabilityTable({ records, onRefresh, onSelectFarmer }) {
                   <td>{formatNumber(row.finalCredits, 4)}</td>
                   <td>{formatNumber(row.revenue, 2)}</td>
                   <td className={`table-status ${statusClass}`}>{row.isEligible ? "Eligible" : "Not Eligible"}</td>
-                  <td>
-                    <button className="secondary inline-button" onClick={() => onSelectFarmer?.(String(row.farmerId))}>
-                      View Farmer
-                    </button>
-                  </td>
+                  {isAdmin ? (
+                    <td>
+                      <button className="secondary inline-button" onClick={() => onSelectFarmer?.(String(row.farmerId))}>
+                        View Farmer
+                      </button>
+                    </td>
+                  ) : null}
                 </tr>
               );
             })}
@@ -56,7 +60,9 @@ export function TraceabilityTable({ records, onRefresh, onSelectFarmer }) {
       </div>
 
       <p className="footnote">
-        Admin can inspect every farmer. Farmer accounts remain locked to their own profile and plot records.
+        {isAdmin
+          ? "Admin can inspect every farmer. Farmer accounts remain locked to their own profile and plot records."
+          : "Farmer access is limited to personal records only."}
       </p>
     </section>
   );

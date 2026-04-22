@@ -1,78 +1,30 @@
-import { useState } from "react";
+const adminNavItems = [
+  { id: "admin-database", label: "Database" },
+  { id: "admin-farmers", label: "Farmers" },
+  { id: "admin-sql", label: "SQL Viewer" },
+  { id: "admin-summary", label: "Summary" },
+  { id: "admin-soil", label: "Soil Analysis" },
+  { id: "admin-performance", label: "Performance" },
+  { id: "admin-certification", label: "Certification" },
+  { id: "admin-infra", label: "Infrastructure" },
+  { id: "admin-traceability", label: "Traceability" }
+];
 
-export function Sidebar({ activeTab, onTabChange }) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
-  const tabs = [
-    {
-      id: "overview",
-      label: "Dashboard Overview",
-      icon: "📊"
-    },
-    {
-      id: "soil-analysis",
-      label: "Soil Analysis",
-      icon: "🌱"
-    },
-    {
-      id: "performance",
-      label: "Performance Analytics",
-      icon: "📈"
-    },
-    {
-      id: "pipeline",
-      label: "Carbon Pipeline",
-      icon: "⚙️"
-    },
-    {
-      id: "infrastructure",
-      label: "Infrastructure",
-      icon: "🏗️"
-    },
-    {
-      id: "traceability",
-      label: "Traceability",
-      icon: "🔗"
-    },
-    {
-      id: "database",
-      label: "Database",
-      icon: "💾"
-    }
-  ];
-
+export function Sidebar() {
   return (
-    <aside className={`sidebar ${isCollapsed ? "collapsed" : ""}`}>
+    <aside className="sidebar reveal">
       <div className="sidebar-header">
-        <button
-          className="sidebar-toggle"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {isCollapsed ? "▶" : "◀"}
-        </button>
-        {!isCollapsed && <h3>Features</h3>}
+        <h3>Admin Portal</h3>
+        <p>Quick navigation across the control surfaces.</p>
       </div>
 
-      <nav className="sidebar-nav">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            className={`nav-item ${activeTab === tab.id ? "active" : ""}`}
-            onClick={() => onTabChange(tab.id)}
-            title={isCollapsed ? tab.label : ""}
-          >
-            <span className="nav-icon">{tab.icon}</span>
-            {!isCollapsed && <span className="nav-label">{tab.label}</span>}
-          </button>
+      <nav className="sidebar-nav" aria-label="Admin portal sections">
+        {adminNavItems.map((item) => (
+          <a key={item.id} className="nav-item" href={`#${item.id}`}>
+            {item.label}
+          </a>
         ))}
       </nav>
-
-      <div className="sidebar-footer">
-        {!isCollapsed && (
-          <p className="sidebar-hint">Click tabs to navigate</p>
-        )}
-      </div>
     </aside>
   );
 }
