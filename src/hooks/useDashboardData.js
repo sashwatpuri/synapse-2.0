@@ -379,7 +379,7 @@ export function useDashboardData() {
       { label: "Carbon Credits", value: formatNumber(selectedRecord.credits, 4) },
       { label: "Confidence", value: `${formatNumber(selectedRecord.confidence * 100, 2)}%` },
       { label: "Buffer (10%)", value: formatNumber(selectedRecord.buffer, 4) },
-      { label: "Revenue ($)", value: formatNumber(selectedRecord.revenue, 2) }
+      { label: "Revenue (₹)", value: formatNumber(selectedRecord.revenue, 2) }
     ];
   }, [selectedRecord]);
 
@@ -501,6 +501,7 @@ export function useDashboardData() {
     farmers,
     plotOptions,
     records,
+    selectedRecord,
     summary,
     nutrientDisplay,
     trendData,

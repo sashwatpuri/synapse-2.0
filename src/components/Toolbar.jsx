@@ -10,7 +10,8 @@ export function Toolbar({
   onFarmerChange,
   onInputChange,
   onNudgeSensors,
-  onExport
+  onExport,
+  onExportPdf
 }) {
   return (
     <section className="toolbar reveal" style={{ animationDelay: "0.05s" }}>
@@ -41,7 +42,7 @@ export function Toolbar({
       </label>
 
       <label className="control">
-        Price per credit ($)
+        Price per credit (₹)
         <input
           type="number"
           min="1"
@@ -54,6 +55,7 @@ export function Toolbar({
 
       <button className="secondary" onClick={onNudgeSensors}>Sensor Burst</button>
       <button className="export" onClick={onExport}>Download CSV</button>
+      <button className="export" onClick={onExportPdf}>Download PDF Report</button>
     </section>
   );
 }

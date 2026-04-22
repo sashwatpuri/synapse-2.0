@@ -19,8 +19,10 @@ import { HeatmapSection } from "./components/HeatmapSection";
 import { ApiContractsSection } from "./components/ApiContractsSection";
 import { TraceabilityTable } from "./components/TraceabilityTable";
 import { NutrientSection } from "./components/NutrientSection";
+import { SqlQueryViewerPanel } from "./components/SqlQueryViewerPanel";
 import { useDashboardData } from "./hooks/useDashboardData";
 import { exportRecordsCsv } from "./services/exportService";
+import { exportCertificationPdf } from "./services/pdfExportService";
 
 ChartJS.register(
   CategoryScale,
@@ -45,6 +47,7 @@ export default function App() {
     farmers,
     plotOptions,
     records,
+    selectedRecord,
     summary,
     nutrientDisplay,
     trendData,
@@ -83,6 +86,13 @@ export default function App() {
         onInputChange={onInputChange}
         onNudgeSensors={nudgeSensors}
         onExport={() => exportRecordsCsv(records)}
+        onExportPdf={() => exportCertificationPdf({
+          selectedRecord,
+          records,
+          summary,
+          role,
+          pricePerCredit: inputs.pricePerCredit
+        })}
       />
 
       <section className="section reveal" style={{ animationDelay: "0.08s" }}>
@@ -103,6 +113,11 @@ export default function App() {
           </div>
         )}
       </section>
+
+      <SqlQueryViewerPanel
+        selectedPlot={selectedPlot}
+        selectedFarmer={selectedFarmer}
+      />
 
       <SummaryCards summary={summary} />
 

@@ -17,7 +17,7 @@ export function exportRecordsCsv(records) {
     formatNumber(row.additionalCO2, 2),
     `${formatNumber(row.confidence * 100, 2)}%`,
     formatNumber(row.finalCredits, 4),
-    formatNumber(row.revenue, 2),
+    `₹${formatNumber(row.revenue, 2)}`,
     row.isEligible ? "Eligible" : "Not Eligible"
   ]);
 

@@ -271,6 +271,60 @@ button:disabled {
   margin: 0;
 }
 
+.sql-panel {
+  border: 1px solid rgba(167, 214, 162, 0.18);
+  border-radius: 14px;
+  background: rgba(9, 20, 15, 0.64);
+  padding: 12px;
+}
+
+.sql-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.sql-summary::-webkit-details-marker {
+  display: none;
+}
+
+.sql-summary h2 {
+  margin: 0;
+}
+
+.sql-summary p {
+  margin: 6px 0 0;
+}
+
+.sql-controls {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: end;
+}
+
+.sql-purpose {
+  margin: 10px 0 8px;
+}
+
+.sql-code {
+  margin: 0;
+  border: 1px solid rgba(167, 214, 162, 0.22);
+  border-radius: 12px;
+  padding: 14px;
+  background: rgba(6, 14, 10, 0.95);
+  color: #dff0df;
+  max-height: 380px;
+  overflow: auto;
+  white-space: pre;
+  line-height: 1.5;
+  font-size: 0.82rem;
+}
+
 .chart-wrap {
   height: 320px;
 }

@@ -24,7 +24,7 @@ export function TraceabilityTable({ records, onRefresh }) {
               <th>Additional CO2 (kg)</th>
               <th>Confidence</th>
               <th>Final Credits</th>
-              <th>Revenue</th>
+              <th>Revenue (₹)</th>
               <th>Certification</th>
             </tr>
           </thead>
@@ -42,7 +42,7 @@ export function TraceabilityTable({ records, onRefresh }) {
                   <td>{formatNumber(row.additionalCO2, 2)}</td>
                   <td>{formatNumber(row.confidence * 100, 2)}%</td>
                   <td>{formatNumber(row.finalCredits, 4)}</td>
-                  <td>${formatNumber(row.revenue, 2)}</td>
+                  <td>₹{formatNumber(row.revenue, 2)}</td>
                   <td className={`table-status ${statusClass}`}>{row.isEligible ? "Eligible" : "Not Eligible"}</td>
                 </tr>
               );

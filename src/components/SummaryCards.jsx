@@ -14,7 +14,7 @@ export function SummaryCards({ summary }) {
     },
     {
       title: "Total Revenue",
-      value: `$${formatNumber(summary.totalRevenue, 2)}`,
+      value: `₹${formatNumber(summary.totalRevenue, 2)}`,
       sub: "Final credits multiplied by current credit price"
     },
     {
