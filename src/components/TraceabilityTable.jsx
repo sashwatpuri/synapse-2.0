@@ -1,7 +1,7 @@
 import { formatNumber } from "../services/carbonService";
 
-export function TraceabilityTable({ records, onRefresh, onSelectFarmer }) {
-  const isAdmin = Boolean(onSelectFarmer);
+export function TraceabilityTable({ records, onRefresh, onViewFarmer }) {
+  const isAdmin = Boolean(onViewFarmer);
 
   return (
     <section className="section reveal" style={{ animationDelay: "0.45s" }}>
@@ -47,7 +47,7 @@ export function TraceabilityTable({ records, onRefresh, onSelectFarmer }) {
                   <td className={`table-status ${statusClass}`}>{row.isEligible ? "Eligible" : "Not Eligible"}</td>
                   {isAdmin ? (
                     <td>
-                      <button className="secondary inline-button" onClick={() => onSelectFarmer?.(String(row.farmerId))}>
+                      <button className="secondary inline-button" onClick={() => onViewFarmer?.(String(row.farmerId))}>
                         View Farmer
                       </button>
                     </td>

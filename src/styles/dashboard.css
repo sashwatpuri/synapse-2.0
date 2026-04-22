@@ -145,6 +145,28 @@ body {
   color: var(--danger);
 }
 
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 9, 6, 0.72);
+  backdrop-filter: blur(6px);
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  z-index: 100;
+}
+
+.modal-card {
+  width: min(1100px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  border-radius: 24px;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(17, 36, 27, 0.98), rgba(10, 20, 15, 0.98));
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+
 .reveal {
   animation: slideReveal 0.6s ease both;
 }

@@ -6,7 +6,7 @@ const adminNavItems = [
   { id: "admin-soil", label: "Soil Analysis" },
   { id: "admin-performance", label: "Performance" },
   { id: "admin-certification", label: "Certification" },
-  { id: "admin-infra", label: "Infrastructure" },
+  { id: "admin-analytics", label: "Analytics" },
   { id: "admin-traceability", label: "Traceability" }
 ];
 

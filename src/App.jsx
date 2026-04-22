@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   ArcElement,
   BarElement,
@@ -13,13 +14,13 @@ import {
 import { Bar, Line, Pie } from "react-chartjs-2";
 import { AuthPanel } from "./components/AuthPanel";
 import { FarmerManagementSection } from "./components/FarmerManagementSection";
+import { FarmerDetailsModal } from "./components/FarmerDetailsModal";
 import { HeroHeader } from "./components/HeroHeader";
 import { Sidebar } from "./components/Sidebar";
 import { SummaryCards } from "./components/SummaryCards";
 import { Toolbar } from "./components/Toolbar";
 import { PipelineSection } from "./components/PipelineSection";
 import { HeatmapSection } from "./components/HeatmapSection";
-import { ApiContractsSection } from "./components/ApiContractsSection";
 import { TraceabilityTable } from "./components/TraceabilityTable";
 import { NutrientSection } from "./components/NutrientSection";
 import { SqlQueryViewerPanel } from "./components/SqlQueryViewerPanel";
@@ -71,6 +72,7 @@ export default function App() {
     activeFarmerPlots,
     activeFarmerRecords,
     activeFarmerAccount,
+    getFarmerProfile,
     newFarmerForm,
     authHints,
     login,
@@ -87,16 +89,20 @@ export default function App() {
     runCertification
   } = useDashboardData();
 
+  const [modalFarmerId, setModalFarmerId] = useState(null);
+
   if (!user) {
     return <AuthPanel authHints={authHints} onLogin={login} />;
   }
 
   const isAdmin = role === "admin";
   const isFarmer = role === "farmer";
+  const modalProfile = modalFarmerId ? getFarmerProfile(modalFarmerId) : null;
 
   return (
     <div className="dashboard">
       <HeroHeader user={user} liveClockText={liveClockText} />
+      {isAdmin ? <FarmerDetailsModal profile={modalProfile} onClose={() => setModalFarmerId(null)} /> : null}
 
       <Toolbar
         user={user}
@@ -229,16 +235,15 @@ export default function App() {
               />
             </section>
 
-            <section id="admin-infra" className="layout">
+            <section id="admin-analytics" className="layout">
               <HeatmapSection heatmapData={heatmapData} />
-              <ApiContractsSection />
             </section>
 
             <div id="admin-traceability">
               <TraceabilityTable
                 records={records}
                 onRefresh={nudgeSensors}
-                onSelectFarmer={onSelectAdminFarmer}
+                onViewFarmer={setModalFarmerId}
               />
             </div>
           </div>
@@ -300,7 +305,7 @@ export default function App() {
           <TraceabilityTable
             records={records}
             onRefresh={nudgeSensors}
-            onSelectFarmer={undefined}
+            onViewFarmer={undefined}
           />
         </>
       )}

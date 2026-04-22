@@ -652,6 +652,28 @@ export function useDashboardData() {
     return accounts.find((account) => account.role === "farmer" && account.farmer_id === activeFarmer.farmer_id) || null;
   }, [accounts, activeFarmer]);
 
+  const getFarmerProfile = useCallback((farmerId) => {
+    const farmer = farmerById.get(Number(farmerId));
+    if (!farmer || !db) return null;
+
+    const plots = db.plots
+      .filter((plot) => plot.farmer_id === farmer.farmer_id)
+      .map((plot) => ({
+        ...plot,
+        soilTypeName: soilById.get(plot.soil_type)?.type_name || "-"
+      }));
+
+    const farmerRecords = records.filter((record) => record.farmerId === farmer.farmer_id);
+    const account = accounts.find((item) => item.role === "farmer" && item.farmer_id === farmer.farmer_id) || null;
+
+    return {
+      farmer,
+      plots,
+      records: farmerRecords,
+      account
+    };
+  }, [accounts, db, farmerById, records, soilById]);
+
   const farmerOptions = useMemo(() => {
     if (role === "farmer") {
       return visibleFarmers.map((farmer) => ({
@@ -739,6 +761,7 @@ export function useDashboardData() {
     activeFarmerPlots,
     activeFarmerRecords,
     activeFarmerAccount,
+    getFarmerProfile,
     newFarmerForm,
     authHints,
     login,
