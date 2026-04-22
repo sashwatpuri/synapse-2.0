@@ -11,6 +11,8 @@ import {
   Tooltip
 } from "chart.js";
 import { Bar, Line, Pie } from "react-chartjs-2";
+import { AuthPanel } from "./components/AuthPanel";
+import { FarmerManagementSection } from "./components/FarmerManagementSection";
 import { HeroHeader } from "./components/HeroHeader";
 import { SummaryCards } from "./components/SummaryCards";
 import { Toolbar } from "./components/Toolbar";
@@ -41,10 +43,11 @@ export default function App() {
     isLoading,
     loadError,
     role,
+    user,
     selectedPlot,
-    selectedFarmer,
+    selectedFarmerId,
     inputs,
-    farmers,
+    farmerOptions,
     plotOptions,
     records,
     selectedRecord,
@@ -61,26 +64,43 @@ export default function App() {
     eligibilityState,
     liveClockText,
     databaseInfo,
-    onRoleChange,
+    farmers,
+    farmerSearch,
+    activeFarmer,
+    activeFarmerPlots,
+    activeFarmerRecords,
+    activeFarmerAccount,
+    newFarmerForm,
+    authHints,
+    login,
+    logout,
     onPlotChange,
     onFarmerChange,
     onInputChange,
+    onFarmerSearchChange,
+    onSelectAdminFarmer,
+    onNewFarmerInputChange,
+    createFarmer,
+    updateFarmer,
     nudgeSensors,
     runCertification
   } = useDashboardData();
 
+  if (!user) {
+    return <AuthPanel authHints={authHints} onLogin={login} />;
+  }
+
   return (
     <div className="dashboard">
-      <HeroHeader role={role} liveClockText={liveClockText} />
+      <HeroHeader user={user} liveClockText={liveClockText} />
 
       <Toolbar
-        role={role}
+        user={user}
         selectedPlot={selectedPlot}
-        selectedFarmer={selectedFarmer}
-        farmers={farmers}
+        selectedFarmerId={selectedFarmerId}
+        farmerOptions={farmerOptions}
         plotOptions={plotOptions}
         inputs={inputs}
-        onRoleChange={onRoleChange}
         onPlotChange={onPlotChange}
         onFarmerChange={onFarmerChange}
         onInputChange={onInputChange}
@@ -93,19 +113,20 @@ export default function App() {
           role,
           pricePerCredit: inputs.pricePerCredit
         })}
+        onLogout={logout}
       />
 
       <section className="section reveal" style={{ animationDelay: "0.08s" }}>
         <div className="section-header">
           <div>
             <h2>Database Integration</h2>
-            <p>Data loaded from your SQL schema and CSV tables in public/data.</p>
+            <p>Seed data still loads from SQL schema and CSV tables, but access is now controlled inside the app.</p>
           </div>
         </div>
         {isLoading && <p className="metric-sub">Loading database files...</p>}
         {!isLoading && loadError && <p className="metric-sub" style={{ color: "var(--danger)" }}>{loadError}</p>}
         {!isLoading && !loadError && databaseInfo && (
-          <div className="cards" style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
+          <div className="cards info-cards">
             <div className="card"><h3>Farmers</h3><div className="metric">{databaseInfo.farmers}</div></div>
             <div className="card"><h3>Plots</h3><div className="metric">{databaseInfo.plots}</div></div>
             <div className="card"><h3>Sensor Readings</h3><div className="metric">{databaseInfo.sensorReadings}</div></div>
@@ -114,9 +135,25 @@ export default function App() {
         )}
       </section>
 
+      <FarmerManagementSection
+        role={role}
+        farmers={farmers}
+        farmerSearch={farmerSearch}
+        activeFarmer={activeFarmer}
+        activeFarmerPlots={activeFarmerPlots}
+        activeFarmerRecords={activeFarmerRecords}
+        activeFarmerAccount={activeFarmerAccount}
+        newFarmerForm={newFarmerForm}
+        onFarmerSearchChange={onFarmerSearchChange}
+        onSelectAdminFarmer={onSelectAdminFarmer}
+        onNewFarmerInputChange={onNewFarmerInputChange}
+        onCreateFarmer={createFarmer}
+        onUpdateFarmer={updateFarmer}
+      />
+
       <SqlQueryViewerPanel
         selectedPlot={selectedPlot}
-        selectedFarmer={selectedFarmer}
+        selectedFarmer={activeFarmer?.name || "All"}
       />
 
       <SummaryCards summary={summary} />
@@ -182,7 +219,7 @@ export default function App() {
         <ApiContractsSection />
       </section>
 
-      <TraceabilityTable records={records} onRefresh={nudgeSensors} />
+      <TraceabilityTable records={records} onRefresh={nudgeSensors} onSelectFarmer={onSelectAdminFarmer} />
     </div>
   );
 }

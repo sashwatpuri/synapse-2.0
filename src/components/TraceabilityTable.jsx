@@ -1,12 +1,12 @@
 import { formatNumber } from "../services/carbonService";
 
-export function TraceabilityTable({ records, onRefresh }) {
+export function TraceabilityTable({ records, onRefresh, onSelectFarmer }) {
   return (
     <section className="section reveal" style={{ animationDelay: "0.45s" }}>
       <div className="section-header">
         <div>
           <h2>Traceability Table</h2>
-          <p>Pipeline outputs stored as a Certification_Report-style dataset in the UI simulation layer.</p>
+          <p>Each record is tied to a farmer profile, plot, certification status, and revenue outcome.</p>
         </div>
         <button className="secondary" onClick={onRefresh}>Refresh Simulation</button>
       </div>
@@ -16,16 +16,16 @@ export function TraceabilityTable({ records, onRefresh }) {
           <thead>
             <tr>
               <th>Record ID</th>
+              <th>Farmer ID</th>
               <th>Farmer</th>
               <th>Plot</th>
-              <th>SOC</th>
+              <th>Location</th>
+              <th>Status</th>
               <th>CO2_eq (kg)</th>
-              <th>Baseline CO2 (kg)</th>
-              <th>Additional CO2 (kg)</th>
-              <th>Confidence</th>
               <th>Final Credits</th>
-              <th>Revenue (₹)</th>
+              <th>Revenue (Rs)</th>
               <th>Certification</th>
+              <th>Access</th>
             </tr>
           </thead>
           <tbody>
@@ -34,16 +34,20 @@ export function TraceabilityTable({ records, onRefresh }) {
               return (
                 <tr key={row.id}>
                   <td>{row.id}</td>
+                  <td>{row.publicFarmerId}</td>
                   <td>{row.farmer}</td>
                   <td>{row.plotId}</td>
-                  <td>{formatNumber(row.soc, 2)}</td>
+                  <td>{row.plotLocation}</td>
+                  <td>{row.farmerStatus}</td>
                   <td>{formatNumber(row.co2Eq, 2)}</td>
-                  <td>{formatNumber(row.baseCO2, 2)}</td>
-                  <td>{formatNumber(row.additionalCO2, 2)}</td>
-                  <td>{formatNumber(row.confidence * 100, 2)}%</td>
                   <td>{formatNumber(row.finalCredits, 4)}</td>
-                  <td>₹{formatNumber(row.revenue, 2)}</td>
+                  <td>{formatNumber(row.revenue, 2)}</td>
                   <td className={`table-status ${statusClass}`}>{row.isEligible ? "Eligible" : "Not Eligible"}</td>
+                  <td>
+                    <button className="secondary inline-button" onClick={() => onSelectFarmer?.(String(row.farmerId))}>
+                      View Farmer
+                    </button>
+                  </td>
                 </tr>
               );
             })}
@@ -52,7 +56,7 @@ export function TraceabilityTable({ records, onRefresh }) {
       </div>
 
       <p className="footnote">
-        RBAC behavior: Admin can trigger certification actions. Data Analyst can analyze and export but cannot trigger certification.
+        Admin can inspect every farmer. Farmer accounts remain locked to their own profile and plot records.
       </p>
     </section>
   );

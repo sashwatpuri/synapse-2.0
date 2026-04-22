@@ -4,20 +4,18 @@ export function exportRecordsCsv(records) {
   if (!records.length) return;
 
   const headers = [
-    "Record ID", "Farmer", "Plot", "SOC", "CO2_eq", "Baseline CO2", "Additional CO2", "Confidence", "Final Credits", "Revenue", "Certification"
+    "Record ID", "Farmer ID", "Farmer", "Plot", "Location", "CO2_eq", "Final Credits", "Revenue", "Certification"
   ];
 
   const csvRows = records.map((row) => [
     row.id,
+    row.publicFarmerId,
     row.farmer,
     row.plotId,
-    formatNumber(row.soc, 2),
+    row.plotLocation,
     formatNumber(row.co2Eq, 2),
-    formatNumber(row.baseCO2, 2),
-    formatNumber(row.additionalCO2, 2),
-    `${formatNumber(row.confidence * 100, 2)}%`,
     formatNumber(row.finalCredits, 4),
-    `₹${formatNumber(row.revenue, 2)}`,
+    `Rs ${formatNumber(row.revenue, 2)}`,
     row.isEligible ? "Eligible" : "Not Eligible"
   ]);
 

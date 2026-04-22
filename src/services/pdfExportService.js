@@ -40,10 +40,11 @@ export function exportCertificationPdf({ selectedRecord, records, summary, role,
     head: [["Field", "Value"]],
     body: [
       ["Farmer", selectedRecord.farmer],
+      ["Farmer ID", selectedRecord.publicFarmerId],
       ["Plot", `Plot ${selectedRecord.plotId}`],
       ["Reporting Period", `${selectedRecord.periodStart || "-"} to ${selectedRecord.periodEnd || "-"}`],
-      ["Role Exported By", role === "admin" ? "Admin / Certifying Authority" : "Data Analyst"],
-      ["Price Per Credit", `₹${formatNumber(pricePerCredit, 2)}`],
+      ["Role Exported By", role === "admin" ? "Admin" : "Farmer"],
+      ["Price Per Credit", `Rs ${formatNumber(pricePerCredit, 2)}`],
       ["Confidence", `${formatNumber(selectedRecord.confidence * 100, 2)}%`]
     ],
     styles: { fontSize: 10, cellPadding: 6 },
@@ -64,7 +65,7 @@ export function exportCertificationPdf({ selectedRecord, records, summary, role,
       ["Carbon Credits", formatNumber(selectedRecord.credits, 4)],
       ["Buffer Credits (10%)", formatNumber(selectedRecord.buffer, 4)],
       ["Final Credits", formatNumber(selectedRecord.finalCredits, 4)],
-      ["Estimated Revenue", `₹${formatNumber(selectedRecord.revenue, 2)}`]
+      ["Estimated Revenue", `Rs ${formatNumber(selectedRecord.revenue, 2)}`]
     ],
     styles: { fontSize: 10, cellPadding: 6 },
     headStyles: { fillColor: [20, 42, 32], textColor: [240, 248, 240] },
@@ -78,7 +79,7 @@ export function exportCertificationPdf({ selectedRecord, records, summary, role,
     body: [
       ["Total Credits", formatNumber(summary.totalCredits, 3)],
       ["Final Credits", formatNumber(summary.finalCredits, 3)],
-      ["Total Revenue", `₹${formatNumber(summary.totalRevenue, 2)}`],
+      ["Total Revenue", `Rs ${formatNumber(summary.totalRevenue, 2)}`],
       ["Eligible Plots", `${summary.eligibleCount} / ${summary.totalCount}`],
       ["Total Farmers", `${summary.farmerCount}`]
     ],
@@ -89,17 +90,18 @@ export function exportCertificationPdf({ selectedRecord, records, summary, role,
 
   const sampleRows = records.slice(0, 10).map((row) => [
     row.id,
+    row.publicFarmerId,
     row.farmer,
     `Plot ${row.plotId}`,
     formatNumber(row.finalCredits, 3),
-    `₹${formatNumber(row.revenue, 2)}`,
+    `Rs ${formatNumber(row.revenue, 2)}`,
     row.isEligible ? "Eligible" : "Not Eligible"
   ]);
 
   autoTable(doc, {
     startY: doc.lastAutoTable.finalY + 18,
     theme: "striped",
-    head: [["Record", "Farmer", "Plot", "Final Credits", "Revenue", "Status"]],
+    head: [["Record", "Farmer ID", "Farmer", "Plot", "Final Credits", "Revenue", "Status"]],
     body: sampleRows,
     styles: { fontSize: 9, cellPadding: 5 },
     headStyles: { fillColor: [20, 42, 32], textColor: [240, 248, 240] },

@@ -1,26 +1,26 @@
 export function Toolbar({
-  role,
+  user,
   selectedPlot,
-  selectedFarmer,
-  farmers,
+  selectedFarmerId,
+  farmerOptions,
   plotOptions,
   inputs,
-  onRoleChange,
   onPlotChange,
   onFarmerChange,
   onInputChange,
   onNudgeSensors,
   onExport,
-  onExportPdf
+  onExportPdf,
+  onLogout
 }) {
+  const role = user?.role || "guest";
+  const isFarmer = role === "farmer";
+
   return (
     <section className="toolbar reveal" style={{ animationDelay: "0.05s" }}>
       <label className="control">
-        Active role
-        <select value={role} onChange={(event) => onRoleChange(event.target.value)}>
-          <option value="admin">Admin / Certifying Authority</option>
-          <option value="analyst">Data Analyst</option>
-        </select>
+        Active User
+        <input value={user ? `${user.username} (${role})` : "Guest"} readOnly />
       </label>
 
       <label className="control">
@@ -34,15 +34,15 @@ export function Toolbar({
 
       <label className="control">
         Farmer
-        <select value={selectedFarmer} onChange={(event) => onFarmerChange(event.target.value)}>
-          {farmers.map((farmer) => (
-            <option key={farmer} value={farmer}>{farmer}</option>
+        <select value={selectedFarmerId} onChange={(event) => onFarmerChange(event.target.value)} disabled={isFarmer}>
+          {farmerOptions.map((farmer) => (
+            <option key={farmer.id} value={farmer.id}>{farmer.label}</option>
           ))}
         </select>
       </label>
 
       <label className="control">
-        Price per credit (₹)
+        Price per credit (Rs)
         <input
           type="number"
           min="1"
@@ -56,6 +56,7 @@ export function Toolbar({
       <button className="secondary" onClick={onNudgeSensors}>Sensor Burst</button>
       <button className="export" onClick={onExport}>Download CSV</button>
       <button className="export" onClick={onExportPdf}>Download PDF Report</button>
+      <button className="secondary" onClick={onLogout}>Logout</button>
     </section>
   );
 }
